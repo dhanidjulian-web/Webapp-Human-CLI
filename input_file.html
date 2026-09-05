@@ -1,0 +1,138 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img">
+<title>Terminal CLI - Icon</title>
+<defs>
+  <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+    <stop offset="0%" stop-color="#151B27"/>
+    <stop offset="55%" stop-color="#0E131E"/>
+    <stop offset="100%" stop-color="#0A0E14"/>
+  </linearGradient>
+  <linearGradient id="headerGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+    <stop offset="0%" stop-color="#2B303F"/>
+    <stop offset="100%" stop-color="#1D222E"/>
+  </linearGradient>
+  <linearGradient id="bodyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+    <stop offset="0%" stop-color="#111620"/>
+    <stop offset="100%" stop-color="#0D1117"/>
+  </linearGradient>
+  <radialGradient id="glowGrad" cx="50%" cy="45%" r="65%">
+    <stop offset="0%" stop-color="#58A6FF" stop-opacity="0.18"/>
+    <stop offset="45%" stop-color="#3FB950" stop-opacity="0.08"/>
+    <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+  </radialGradient>
+  <linearGradient id="borderGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+    <stop offset="0%" stop-color="#2D333F" stop-opacity="0"/>
+    <stop offset="20%" stop-color="#3A4156" stop-opacity="1"/>
+    <stop offset="80%" stop-color="#3A4156" stop-opacity="1"/>
+    <stop offset="100%" stop-color="#2D333F" stop-opacity="0"/>
+  </linearGradient>
+  <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+    <feDropShadow dx="0" dy="20" stdDeviation="20" flood-color="#000000" flood-opacity="0.55"/>
+    <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000000" flood-opacity="0.4"/>
+  </filter>
+  <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
+    <feGaussianBlur stdDeviation="6" result="blur"/>
+    <feColorMatrix type="matrix" values="0 0 0 0 0.34  0 0 0 0 0.65  0 0 0 0 1  0 0 0 0.5 0"/>
+  </filter>
+  <clipPath id="winClip">
+    <rect x="24" y="48" width="208" height="144" rx="16"/>
+  </clipPath>
+  <pattern id="dotPattern" width="18" height="18" patternUnits="userSpaceOnUse">
+    <circle cx="1" cy="1" r="1" fill="#FFFFFF"/>
+  </pattern>
+</defs>
+
+<!-- App Background -->
+<rect width="256" height="256" rx="56" fill="url(#bgGrad)"/>
+<!-- subtle pattern overlay -->
+<g opacity="0.04">
+  <rect width="256" height="256" rx="56" fill="url(#dotPattern)"/>
+</g>
+<!-- ambient glow behind terminal -->
+<ellipse cx="128" cy="132" rx="125" ry="78" fill="url(#glowGrad)"/>
+
+<!-- Terminal Window -->
+<g filter="url(#shadow)">
+  <!-- main body -->
+  <rect x="24" y="48" width="208" height="144" rx="16" fill="url(#bodyGrad)" stroke="#2A3142" stroke-width="1.2"/>
+  <!-- header -->
+  <g clip-path="url(#winClip)">
+    <rect x="24" y="48" width="208" height="37" fill="url(#headerGrad)"/>
+    <rect x="24" y="84.5" width="208" height="1" fill="#2A3142" opacity="0.9"/>
+    <!-- top highlight -->
+    <rect x="24" y="48" width="208" height="1.5" fill="white" opacity="0.07"/>
+  </g>
+  <!-- inner highlight border -->
+  <rect x="24.6" y="48.6" width="206.8" height="142.8" rx="15.3" fill="none" stroke="white" stroke-opacity="0.06" stroke-width="1"/>
+</g>
+
+<!-- Traffic lights -->
+<g>
+  <circle cx="44.5" cy="66.5" r="6.5" fill="#FF5F57" stroke="#E0443E" stroke-width="0.8"/>
+  <circle cx="44.5" cy="66.5" r="2.3" fill="white" opacity="0.12"/>
+  <circle cx="62.5" cy="66.5" r="6.5" fill="#FFBD2E" stroke="#DFA124" stroke-width="0.8"/>
+  <circle cx="62.5" cy="66.5" r="2.3" fill="white" opacity="0.12"/>
+  <circle cx="80.5" cy="66.5" r="6.5" fill="#28C840" stroke="#1F9E32" stroke-width="0.8"/>
+  <circle cx="80.5" cy="66.5" r="2.3" fill="white" opacity="0.12"/>
+</g>
+
+<!-- Title -->
+<text x="128" y="70.5" text-anchor="middle" font-family="'Inter','SF Pro Display',system-ui,sans-serif" font-size="9.5" font-weight="600" fill="#8B949E" letter-spacing="0.6">bash — terminal</text>
+<!-- title icon >_ -->
+<g transform="translate(103,62.5)" opacity="0.9">
+  <text font-family="'JetBrains Mono','SF Mono',Menlo,monospace" font-size="7" font-weight="800" fill="#636D83">›_</text>
+</g>
+
+<!-- Content -->
+<g font-family="'JetBrains Mono','Cascadia Code','Fira Code','SF Mono',Menlo,monospace">
+  <!-- Line 1 : prompt -->
+  <text x="38" y="112" font-size="12" font-weight="700" fill="#3FB950">➜</text>
+  <text x="54.5" y="112" font-size="12" font-weight="700" fill="#58A6FF">~</text>
+  <text x="71" y="112" font-size="12" fill="#8B949E" font-weight="600">$</text>
+  <text x="84" y="112" font-size="11.2" fill="#E6EDF3" font-weight="500">npm install</text>
+  <text x="159" y="112" font-size="11.2" fill="#FF7B72" font-weight="600">cli-b</text>
+  <text x="190" y="112" font-size="10.5" fill="#636D83">--global</text>
+
+  <!-- Line 2 : fetching -->
+  <g font-size="9.5" >
+    <text x="38" y="133.5" fill="#484F5E" font-weight="600">[1/4]</text>
+    <text x="70" y="133.5" fill="#8B949E">Resolving packages...</text>
+    <text x="178" y="133.5" fill="#3FB950" font-size="10">◐</text>
+  </g>
+
+  <!-- Line 3 : progress bar background -->
+  <rect x="38" y="142.5" width="180" height="4.5" rx="2.25" fill="#21262D"/>
+  <rect x="38" y="142.5" width="132" height="4.5" rx="2.25" fill="#3FB950"/>
+  <rect x="38" y="142.5" width="132" height="4.5" rx="2.25" fill="white" opacity="0.12"/>
+  <!-- glow on bar -->
+  <rect x="155" y="142.5" width="24" height="4.5" rx="2.25" fill="#3FB950" opacity="0.9" filter="url(#softGlow)"/>
+
+  <!-- Line 4 : success -->
+  <text x="38" y="164.5" font-size="11.5" fill="#3FB950" font-weight="700">✔</text>
+  <text x="55" y="164.5" font-size="10.2" fill="#8B949E">Installed</text>
+  <text x="105" y="164.5" font-size="10.2" fill="#E6EDF3" font-weight="700">12 packages</text>
+  <text x="168" y="164.5" font-size="10.2" fill="#484F5E">in 1.24s</text>
+
+  <!-- Line 5 : active prompt with cursor -->
+  <text x="38" y="184.5" font-size="12.5" fill="#58A6FF" font-weight="800">❯</text>
+  <text x="56" y="184.5" font-size="11.2" fill="#E6EDF3" letter-spacing="0.2">_</text>
+  <!-- block cursor -->
+  <g>
+    <rect x="64.5" y="174.5" width="10.5" height="14.5" rx="1.8" fill="#58A6FF"/>
+    <rect x="64.5" y="174.5" width="10.5" height="14.5" rx="1.8" fill="none" stroke="white" stroke-opacity="0.18" stroke-width="0.8"/>
+    <animateTransform attributeName="transform" type="translate" values="0,0; 0,0; 0,0" dur="1s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="1;1;0.15;1" dur="1.25s" repeatCount="indefinite"/>
+  </g>
+  <text x="80" y="184.5" font-size="9.5" fill="#484F5E" opacity="0.95">press enter to continue</text>
+</g>
+
+<!-- Bottom accent line -->
+<rect x="24" y="190.2" width="208" height="1.8" rx="0.9" fill="url(#borderGrad)" opacity="0.35"/>
+
+<!-- Small badge bottom (optional subtle) -->
+<g transform="translate(0,0)">
+  <rect x="93" y="208" width="70" height="20" rx="10" fill="#151B27" stroke="#2A3142" stroke-width="1"/>
+  <circle cx="102.5" cy="218" r="3.5" fill="#3FB950" opacity="0.9"/>
+  <circle cx="102.5" cy="218" r="1.2" fill="white" opacity="0.9"/>
+  <text x="111" y="221.8" font-family="'Inter',system-ui,sans-serif" font-size="8.5" font-weight="700" fill="#C9D1D9" letter-spacing="0.8">CLI READY</text>
+</g>
+</svg>
