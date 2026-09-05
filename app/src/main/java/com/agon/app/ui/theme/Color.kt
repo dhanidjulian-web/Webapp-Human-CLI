@@ -2,16 +2,30 @@ package com.agon.app.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val InkBlue = Color(0xFF075E64)
-val DeepInk = Color(0xFF003F43)
-val Mint = Color(0xFF7CDDD5)
-val SoftMint = Color(0xFFA5F0E8)
-val Amber = Color(0xFF9B5D00)
-val WarmAmber = Color(0xFFFFB95C)
-val Cloud = Color(0xFFF4F8F7)
-val PaleTeal = Color(0xFFD6F3EF)
-val Graphite = Color(0xFF17201F)
-val Night = Color(0xFF0D1514)
-val NightSurface = Color(0xFF141D1C)
-val NightRaised = Color(0xFF1C2927)
-val ErrorRed = Color(0xFFBA1A1A)
+// MusGo-OS — deep terminal / vault aesthetic
+val MusGoCyan = Color(0xFF00E5C0)
+val MusGoCyanDim = Color(0xFF00B89A)
+val MusGoTeal = Color(0xFF0D9488)
+val MusGoBlue = Color(0xFF38BDF8)
+val MusGoAmber = Color(0xFFFBBF24)
+val MusGoRed = Color(0xFFF87171)
+val MusGoGreen = Color(0xFF34D399)
+val MusGoOrange = Color(0xFFFB923C)
+
+// Dark surfaces
+val MusGoBg = Color(0xFF0A0E14)
+val MusGoSurface = Color(0xFF111827)
+val MusGoSurfaceHigh = Color(0xFF1A2332)
+val MusGoSurfaceHighest = Color(0xFF243044)
+val MusGoBorder = Color(0xFF2A3A4F)
+val MusGoOnBg = Color(0xFFE2E8F0)
+val MusGoOnBgMuted = Color(0xFF94A3B8)
+
+// Light surfaces
+val MusGoBgLight = Color(0xFFF0F4F8)
+val MusGoSurfaceLight = Color(0xFFFFFFFF)
+val MusGoSurfaceHighLight = Color(0xFFE8EEF4)
+val MusGoOnBgLight = Color(0xFF0F172A)
+val MusGoOnBgMutedLight = Color(0xFF64748B)
+val MusGoPrimaryLight = Color(0xFF0F766E)
+val MusGoSecondaryLight = Color(0xFF0369A1)

@@ -7,16 +7,12 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Code
-import androidx.compose.material.icons.filled.PhoneInTalk
-import androidx.compose.material.icons.filled.Public
-import androidx.compose.material.icons.filled.Storage
-import androidx.compose.material.icons.filled.Terminal
-import androidx.compose.material.icons.outlined.Code
-import androidx.compose.material.icons.outlined.PhoneInTalk
-import androidx.compose.material.icons.outlined.Public
-import androidx.compose.material.icons.outlined.Storage
-import androidx.compose.material.icons.outlined.Terminal
+import androidx.compose.material.icons.filled.Dashboard
+import androidx.compose.material.icons.filled.Dns
+import androidx.compose.material.icons.filled.Key
+import androidx.compose.material.icons.filled.Policy
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.SmartToy
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -25,124 +21,143 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.agon.app.ui.screens.ChatScreen
-import com.agon.app.ui.screens.LocalGgufScreen
-import com.agon.app.ui.screens.ProviderCatalogScreen
-import com.agon.app.ui.screens.RagmyAgentScreen
+import androidx.navigation.navArgument
+import com.agon.app.di.AppContainer
+import com.agon.app.ui.screens.DashboardScreen
+import com.agon.app.ui.screens.PoliciesScreen
+import com.agon.app.ui.screens.ProfilesScreen
 import com.agon.app.ui.screens.SandboxScreen
-import com.agon.app.ui.screens.VoiceCallScreen
+import com.agon.app.ui.screens.SettingsScreen
+import com.agon.app.ui.screens.TerminalScreen
+import com.agon.app.ui.screens.VaultScreen
 import com.agon.app.ui.theme.AgonAppTheme
-import com.agon.app.viewmodel.AlpineSandboxViewModel
-import com.agon.app.viewmodel.ChatViewModel
-import com.agon.app.viewmodel.LocalGgufViewModel
-import com.agon.app.viewmodel.ProviderViewModel
-import com.agon.app.viewmodel.VoiceCallViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        val app = application as MusGoApp
         setContent {
             AgonAppTheme {
-                MainApp()
+                MusGoRoot(container = app.container)
             }
         }
     }
 }
 
-private data class Destination(val route: String, val label: String)
+private data class TabItem(
+    val route: String,
+    val label: String,
+    val icon: ImageVector,
+)
 
-private val destinations = listOf(
-    Destination("chat", "KodeAI"),
-    Destination("sandbox", "Sandbox"),
-    Destination("providers", "Provider"),
-    Destination("ragmy_agent", "Ragmy AI"),
-    Destination("voice_call", "Telp AI")
+private val mainTabs = listOf(
+    TabItem("dashboard", "Home", Icons.Default.Dashboard),
+    TabItem("sandbox", "Sandbox", Icons.Default.Dns),
+    TabItem("vault", "Vault", Icons.Default.Key),
+    TabItem("profiles", "Agents", Icons.Default.SmartToy),
+    TabItem("policies", "Policy", Icons.Default.Policy),
+    TabItem("settings", "System", Icons.Default.Settings),
 )
 
 @Composable
-fun MainApp() {
+fun MusGoRoot(container: AppContainer) {
     val navController = rememberNavController()
-
-    val chatViewModel: ChatViewModel = viewModel()
-    val providerViewModel: ProviderViewModel = viewModel()
-    val localGgufViewModel: LocalGgufViewModel = viewModel()
-    val voiceCallViewModel: VoiceCallViewModel = viewModel()
-    val sandboxViewModel: AlpineSandboxViewModel = viewModel()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+    val showBottomBar = currentRoute != null && currentRoute.startsWith("terminal").not()
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        bottomBar = { BottomNav(navController) },
+        bottomBar = {
+            if (showBottomBar) {
+                MusGoBottomBar(navController = navController, currentRoute = currentRoute)
+            }
+        },
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = "chat",
+            startDestination = "dashboard",
             modifier = Modifier.padding(innerPadding),
         ) {
-            composable("chat") {
-                ChatScreen(
-                    viewModel = chatViewModel,
-                    onNavigateToProviders = { navController.navigateSingleTop("providers") }
-                )
+            composable("dashboard") {
+                DashboardScreen(container = container)
             }
             composable("sandbox") {
-                SandboxScreen(viewModel = sandboxViewModel)
-            }
-            composable("providers") {
-                ProviderCatalogScreen(
-                    viewModel = providerViewModel,
-                    onNavigateToChat = { navController.navigateSingleTop("chat") }
+                SandboxScreen(
+                    container = container,
+                    onOpenTerminal = { sessionId ->
+                        navController.navigate("terminal/$sessionId")
+                    },
                 )
             }
-            composable("ragmy_agent") {
-                RagmyAgentScreen()
+            composable("vault") {
+                VaultScreen(container = container)
             }
-            composable("voice_call") {
-                VoiceCallScreen(viewModel = voiceCallViewModel)
+            composable("profiles") {
+                ProfilesScreen(container = container)
+            }
+            composable("policies") {
+                PoliciesScreen(container = container)
+            }
+            composable("settings") {
+                SettingsScreen()
+            }
+            composable(
+                route = "terminal/{sessionId}",
+                arguments = listOf(
+                    navArgument("sessionId") { type = NavType.LongType },
+                ),
+            ) { entry ->
+                val sessionId = entry.arguments?.getLong("sessionId") ?: 0L
+                TerminalScreen(
+                    sessionId = sessionId,
+                    container = container,
+                    onBack = { navController.popBackStack() },
+                )
             }
         }
     }
 }
 
 @Composable
-fun BottomNav(navController: NavHostController) {
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
-
+private fun MusGoBottomBar(
+    navController: NavHostController,
+    currentRoute: String?,
+) {
     NavigationBar {
-        destinations.forEach { destination ->
-            val selected = currentRoute == destination.route
+        mainTabs.forEach { tab ->
             NavigationBarItem(
                 icon = {
-                    Icon(
-                        imageVector = when (destination.route) {
-                            "chat" -> if (selected) Icons.Filled.Code else Icons.Outlined.Code
-                            "sandbox" -> if (selected) Icons.Filled.Terminal else Icons.Outlined.Terminal
-                            "providers" -> if (selected) Icons.Filled.Storage else Icons.Outlined.Storage
-                            "ragmy_agent" -> if (selected) Icons.Filled.Public else Icons.Outlined.Public
-                            else -> if (selected) Icons.Filled.PhoneInTalk else Icons.Outlined.PhoneInTalk
-                        },
-                        contentDescription = destination.label,
+                    Icon(imageVector = tab.icon, contentDescription = tab.label)
+                },
+                label = {
+                    Text(
+                        text = tab.label,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
                 },
-                label = { Text(destination.label) },
-                selected = selected,
-                onClick = { navController.navigateSingleTop(destination.route) },
+                selected = currentRoute == tab.route,
+                onClick = {
+                    navController.navigate(tab.route) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                },
             )
         }
-    }
-}
-
-private fun NavHostController.navigateSingleTop(route: String) {
-    navigate(route) {
-        popUpTo(graph.startDestinationId) { saveState = true }
-        launchSingleTop = true
-        restoreState = true
     }
 }

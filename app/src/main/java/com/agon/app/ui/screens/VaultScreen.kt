@@ -14,13 +14,14 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.DeleteForever
-import androidx.compose.material.icons.filled.Dns
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Stop
-import androidx.compose.material.icons.filled.Terminal
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Key
+import androidx.compose.material.icons.filled.Verified
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -30,12 +31,11 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -52,28 +52,29 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.agon.app.data.db.entity.SandboxEntity
-import com.agon.app.data.model.LinuxDistro
-import com.agon.app.data.model.SandboxStatus
+import com.agon.app.data.model.CredentialType
+import com.agon.app.data.model.RedactedCredential
 import com.agon.app.di.AppContainer
 import com.agon.app.ui.components.EmptyState
 import com.agon.app.ui.components.MonoText
-import com.agon.app.ui.components.StatusChip
-import com.agon.app.viewmodel.SandboxViewModel
+import com.agon.app.ui.theme.MusGoCyan
+import com.agon.app.ui.theme.MusGoGreen
+import com.agon.app.ui.theme.MusGoRed
+import com.agon.app.viewmodel.VaultViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SandboxScreen(
-    container: AppContainer,
-    onOpenTerminal: (sessionId: Long) -> Unit,
-) {
-    val vm: SandboxViewModel = viewModel(factory = SandboxViewModel.Factory(container))
+fun VaultScreen(container: AppContainer) {
+    val vm: VaultViewModel = viewModel(factory = VaultViewModel.Factory(container))
     val state by vm.uiState.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
-    var showCreate by remember { mutableStateOf(false) }
+    var showAdd by remember { mutableStateOf(false) }
 
     LaunchedEffect(state.message, state.error) {
         state.message?.let {
@@ -86,21 +87,14 @@ fun SandboxScreen(
         }
     }
 
-    LaunchedEffect(state.lastOpenedSessionId) {
-        state.lastOpenedSessionId?.let { sid ->
-            onOpenTerminal(sid)
-            vm.consumeNavigation()
-        }
-    }
-
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     Column {
-                        Text("Sandbox Controller", fontWeight = FontWeight.Bold)
+                        Text("Secure Vault", fontWeight = FontWeight.Bold)
                         Text(
-                            "Local ProcessExecutor · 30s timeout",
+                            "AES-256-GCM · Android Keystore",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -110,16 +104,19 @@ fun SandboxScreen(
         },
         snackbarHost = { SnackbarHost(snackbar) },
         floatingActionButton = {
-            FloatingActionButton(onClick = { showCreate = true }) {
-                Icon(Icons.Default.Add, contentDescription = "Create sandbox")
+            FloatingActionButton(
+                onClick = { showAdd = true },
+                containerColor = MaterialTheme.colorScheme.primary,
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Add credential")
             }
         },
     ) { padding ->
-        if (state.sandboxes.isEmpty() && !state.isBusy) {
+        if (state.credentials.isEmpty()) {
             EmptyState(
-                icon = Icons.Default.Dns,
-                title = "No sandboxes",
-                subtitle = "Create an Alpine/Debian/Ubuntu workspace under the app-private sandbox root.",
+                icon = Icons.Default.Key,
+                title = "Vault is empty",
+                subtitle = "Add GitHub PATs, AI API keys, or SSH credentials. Plaintext never hits disk.",
                 emptyModifier = Modifier
                     .fillMaxSize()
                     .padding(padding),
@@ -130,27 +127,14 @@ fun SandboxScreen(
                     .fillMaxSize()
                     .padding(padding),
                 contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                if (state.isBusy) {
-                    item {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        ) {
-                            CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
-                            Text("Working…", style = MaterialTheme.typography.bodySmall)
-                        }
-                    }
-                }
-                items(state.sandboxes, key = { it.id }) { sb ->
-                    SandboxCard(
-                        sandbox = sb,
-                        busy = state.isBusy,
-                        onInit = { vm.initialize(sb.id) },
-                        onStop = { vm.stop(sb.id) },
-                        onDestroy = { vm.destroy(sb.id) },
-                        onTerminal = { vm.openTerminal(sb.id) },
+                items(state.credentials, key = { it.id }) { cred ->
+                    CredentialCard(
+                        cred = cred,
+                        isValidating = state.isValidatingId == cred.id,
+                        onValidate = { vm.validate(cred.id) },
+                        onDelete = { vm.delete(cred.id) },
                     )
                 }
                 item { Spacer(Modifier.height(72.dp)) }
@@ -158,25 +142,24 @@ fun SandboxScreen(
         }
     }
 
-    if (showCreate) {
-        CreateSandboxDialog(
-            onDismiss = { showCreate = false },
-            onCreate = { name, distro ->
-                vm.create(name, distro)
-                showCreate = false
+    if (showAdd) {
+        AddCredentialDialog(
+            isSaving = state.isSaving,
+            onDismiss = { showAdd = false },
+            onSave = { type, label, secret ->
+                vm.save(type, label, secret)
+                showAdd = false
             },
         )
     }
 }
 
 @Composable
-private fun SandboxCard(
-    sandbox: SandboxEntity,
-    busy: Boolean,
-    onInit: () -> Unit,
-    onStop: () -> Unit,
-    onDestroy: () -> Unit,
-    onTerminal: () -> Unit,
+private fun CredentialCard(
+    cred: RedactedCredential,
+    isValidating: Boolean,
+    onValidate: () -> Unit,
+    onDelete: () -> Unit,
 ) {
     Card(
         colors = CardDefaults.cardColors(
@@ -191,66 +174,43 @@ private fun SandboxCard(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(sandbox.name, fontWeight = FontWeight.Bold)
+                    Text(cred.label, fontWeight = FontWeight.SemiBold)
                     Text(
-                        sandbox.linuxDistro.displayName,
+                        cred.type.displayName,
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                StatusChip(sandbox.status)
+                MonoText(cred.redactedValue, color = MusGoCyan)
             }
-            Spacer(Modifier.height(8.dp))
-            MonoText(
-                sandbox.storagePath,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 2,
-            )
-            if (!sandbox.lastError.isNullOrBlank()) {
-                Spacer(Modifier.height(4.dp))
+
+            if (cred.validationMessage != null) {
+                Spacer(Modifier.height(8.dp))
                 Text(
-                    sandbox.lastError,
+                    cred.validationMessage,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error,
+                    color = when (cred.isValid) {
+                        true -> MusGoGreen
+                        false -> MusGoRed
+                        null -> MaterialTheme.colorScheme.onSurfaceVariant
+                    },
                 )
             }
-            Text(
-                "Active sessions: ${sandbox.activeSessionCount}",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = 4.dp),
-            )
-            Spacer(Modifier.height(12.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                when (sandbox.status) {
-                    SandboxStatus.CREATED, SandboxStatus.STOPPED, SandboxStatus.ERROR -> {
-                        FilledTonalButton(onClick = onInit, enabled = !busy) {
-                            Icon(Icons.Default.PlayArrow, null, Modifier.size(18.dp))
-                            Spacer(Modifier.width(4.dp))
-                            Text("Init")
-                        }
+
+            Spacer(Modifier.height(10.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                TextButton(onClick = onValidate, enabled = !isValidating) {
+                    if (isValidating) {
+                        CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
+                        Spacer(Modifier.width(8.dp))
+                    } else {
+                        Icon(Icons.Default.Verified, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(6.dp))
                     }
-                    SandboxStatus.RUNNING -> {
-                        OutlinedButton(onClick = onStop, enabled = !busy) {
-                            Icon(Icons.Default.Stop, null, Modifier.size(18.dp))
-                            Spacer(Modifier.width(4.dp))
-                            Text("Stop")
-                        }
-                    }
+                    Text("Test connectivity")
                 }
-                Button(
-                    onClick = onTerminal,
-                    enabled = !busy && sandbox.status != SandboxStatus.ERROR,
-                ) {
-                    Icon(Icons.Default.Terminal, null, Modifier.size(18.dp))
-                    Spacer(Modifier.width(4.dp))
-                    Text("CLI")
-                }
-                OutlinedButton(onClick = onDestroy, enabled = !busy) {
-                    Icon(Icons.Default.DeleteForever, null, Modifier.size(18.dp))
+                IconButton(onClick = onDelete) {
+                    Icon(Icons.Default.Delete, contentDescription = "Delete", tint = MusGoRed)
                 }
             }
         }
@@ -259,61 +219,92 @@ private fun SandboxCard(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun CreateSandboxDialog(
+private fun AddCredentialDialog(
+    isSaving: Boolean,
     onDismiss: () -> Unit,
-    onCreate: (String, LinuxDistro) -> Unit,
+    onSave: (CredentialType, String, String) -> Unit,
 ) {
-    var name by remember { mutableStateOf("") }
-    var distro by remember { mutableStateOf(LinuxDistro.ALPINE) }
+    var type by remember { mutableStateOf(CredentialType.GITHUB_PAT) }
+    var label by remember { mutableStateOf("") }
+    var secret by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
+    var showSecret by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Create sandbox") },
+        title = { Text("Store credential") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
-                    "Creates a private directory under cache/sandbox/ and runs a real shell smoke test.",
+                    "Value is encrypted with AES-256-GCM before Room insert. UI only keeps a redacted preview.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text("Name") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                )
                 ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
                     OutlinedTextField(
-                        value = distro.displayName,
+                        value = type.displayName,
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("Linux distro target") },
+                        label = { Text("Type") },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
                         modifier = Modifier
                             .menuAnchor(MenuAnchorType.PrimaryNotEditable)
                             .fillMaxWidth(),
                     )
                     ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                        LinuxDistro.entries.forEach { d ->
+                        CredentialType.entries.forEach { t ->
                             DropdownMenuItem(
-                                text = { Text(d.displayName) },
+                                text = { Text(t.displayName) },
                                 onClick = {
-                                    distro = d
+                                    type = t
                                     expanded = false
                                 },
                             )
                         }
                     }
                 }
+                OutlinedTextField(
+                    value = label,
+                    onValueChange = { label = it },
+                    label = { Text("Label") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                OutlinedTextField(
+                    value = secret,
+                    onValueChange = { secret = it },
+                    label = { Text("Secret") },
+                    modifier = Modifier.fillMaxWidth(),
+                    visualTransformation = if (showSecret) {
+                        VisualTransformation.None
+                    } else {
+                        PasswordVisualTransformation()
+                    },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    trailingIcon = {
+                        IconButton(onClick = { showSecret = !showSecret }) {
+                            Icon(
+                                if (showSecret) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                contentDescription = null,
+                            )
+                        }
+                    },
+                    minLines = if (type == CredentialType.SSH_PRIVATE_KEY) 4 else 1,
+                    maxLines = if (type == CredentialType.SSH_PRIVATE_KEY) 8 else 3,
+                )
             }
         },
         confirmButton = {
             Button(
-                onClick = { onCreate(name, distro) },
-                enabled = name.isNotBlank(),
-            ) { Text("Create & initialize") }
+                onClick = { onSave(type, label, secret) },
+                enabled = !isSaving && label.isNotBlank() && secret.isNotBlank(),
+            ) {
+                if (isSaving) {
+                    CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
+                } else {
+                    Text("Encrypt & store")
+                }
+            }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) { Text("Cancel") }
